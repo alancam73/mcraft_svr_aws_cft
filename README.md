@@ -21,6 +21,8 @@ The stack can be created in e.g. AWS Cloud9 from the command line as follows: -
  
 <code>$ aws cloudformation create-stack --stack-name testMcraftSvr --template-body file://mcraft_cft.yaml --parameters ParameterKey=KeyNameParam,ParameterValue=minecraft-svr ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt) ParameterKey=EIPAssocParam,ParameterValue=true ParameterKey=ElasticIpParam,ParameterValue=123.123.123.123 --capabilities CAPABILITY_NAMED_IAM</code>
 
+To update the stack e.g. to change the instance-type POST stack creation, simply replace <code>create-stack</code> with <code>update-stack</code>
+
 ## Outputs
 Look at the Outputs section of the CFT stack to find the MCraftSvrIpPort which is the IP and port to give to your minecraft squadron buddies!	
 
