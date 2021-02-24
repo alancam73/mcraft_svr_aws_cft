@@ -43,3 +43,8 @@ Here are some debugging tips
 * If the stack fails to create check out the CFT stack Events section - it usually has a good error description
 * if the stack succeeds but no Minecraft server is created then check (a) the S3 bucket you are using with the minecraft.service and minecraft server jar file is accessible (b) check versions - the script defaults to 1.16.4 - change this to whatever version you want but make sure the S3 bucket version and mcraft-user-data.txt version ref matches (c) check <code>/var/log/user-data.log</code> and <code>/var/log/cloud-init-output.log</code> to see if any errors occurred - e.g. you may need to change the <code>s3_bkt_dir</code> since S3 bucket names need to be unique.
 
+## Next Steps
+Apart from "Have fun!"...
+* Leverage the StartEC2Instances and StopEc2Instances lambda fxns with a scheduled cron job so that the minecraft server only runs at certain times (saves cost, and avoids your kid staying up all night "mining", and "making the advancement"!!)
+  * get the instance-id from your Minecraft server EC2 instance and pass it in as "inst_name" as an Environment variable to the lambda fxn. Do this for both StartEC2Instances and StopEc2Instances
+  * Set up a CloudWatch Events Rule eg <code>0 23 ? * MON-FRI *</code> on StartEC2Instances will start the Instance every weekday at 2300 GMT (3pm PST). <code>0 5 ? * MON-FRI *</code> on StopEC2Instances will stop the instance M-F at 9pm PST
