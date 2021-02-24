@@ -11,6 +11,7 @@ Optionally an Elastic IP can be passed in to preserve the IP of the server upon 
 * You should create your own S3 bucket and place the 2 files below in it - see https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/README.txt for details
   * https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/minecraft_server.1.16.4.jar - or later version from https://www.minecraft.net/en-us/download/server/
   * https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/minecraft.service 
+* You should understand the costs involved - see https://aws.amazon.com/ec2/pricing/ - a t3a.medium suffices for up to ~5 players 
 
 ## Commmand line
 The stack can be created in e.g. AWS Cloud9 from the command line as follows: -
