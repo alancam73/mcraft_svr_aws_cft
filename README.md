@@ -23,3 +23,14 @@ The stack can be created in e.g. AWS Cloud9 from the command line as follows: -
 
 ## Outputs
 Look at the Outputs section of the CFT stack to find the MCraftSvrIpPort which is the IP and port to give to your minecraft squadron buddies!	
+
+## Validation
+Here are some ways to check everything worked!
+* https://mcsrvstat.us/ - type in the MCraftSvrIpPort (dont forget the :25565 port at end) - after a minute or so, it should show "A Minecraft Server" Players 0/20
+* ssh to your instance - type <pre>journalctl -f -u minecraft.service</pre> - it should show a successfully spawned Minecraft world
+
+## Debugging
+Here are some debugging tips
+* If the stack fails to create check out the CFT stack Events section - it usually has a good error description
+* if the stack succeeds but no Minecraft server is created then check (a) the S3 bucket you are using with the minecraft.service and minecraft server jar file is accessible (b) check versions - the script defaults to 1.16.4 - change this to whatever version you want but make sure the S3 bucket version and mcraft-user-data.txt version ref matches (c) check <pre>/var/log/user-data.log</pre> and <pre>/var/log/cloud-init-output.log</pre> to see if any errors occurred - e.g. you may need to change the <pre>s3_bkt_dir</pre> since S3 bucket names need to be unique.
+
