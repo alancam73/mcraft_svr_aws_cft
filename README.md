@@ -11,11 +11,11 @@ The stack can be created in e.g. AWS Cloud9 from the command line as follows: -
 
 - minimal parameters
 
-$ aws cloudformation create-stack --stack-name testMcraftSvr --template-body file://mcraft_cft.yaml --parameters ParameterKey=KeyNameParam,ParameterValue=minecraft-svr ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt) --capabilities CAPABILITY_NAMED_IAM
+<code>$ aws cloudformation create-stack --stack-name testMcraftSvr --template-body file://mcraft_cft.yaml --parameters ParameterKey=KeyNameParam,ParameterValue=minecraft-svr ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt) --capabilities CAPABILITY_NAMED_IAM</code>
 
 - select a different instance type to host the minecraft server
 
-$ aws cloudformation create-stack --stack-name testMcraftSvr --template-body file://mcraft_cft.yaml --parameters ParameterKey=KeyNameParam,ParameterValue=minecraft-svr ParameterKey=InstanceTypeParam,ParameterValue=t3a.medium ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt) --capabilities CAPABILITY_NAMED_IAM
+<pre>$ aws cloudformation create-stack --stack-name testMcraftSvr --template-body file://mcraft_cft.yaml --parameters ParameterKey=KeyNameParam,ParameterValue=minecraft-svr ParameterKey=InstanceTypeParam,ParameterValue=t3a.medium ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt) --capabilities CAPABILITY_NAMED_IAM</pre>
 
 - associate a BYOIP / Elastic IP
  
