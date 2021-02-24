@@ -6,6 +6,12 @@ This repository contains an AWS CloudFormation YAML file to create a Minecraft s
 It fully automates the process of creating the requisite IAM roles, Security Groups, and the EC2 instance on which the minecraft server runs.
 Optionally an Elastic IP can be passed in to preserve the IP of the server upon start/stop instance.
 
+## Pre-requisites
+* You should have your own AWS account
+* You should create your own S3 bucket and place the 2 files below in it - see https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/README.txt for details
+** https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/minecraft_server.1.16.4.jar - or later version from https://www.minecraft.net/en-us/download/server/
+** https://minecraft-svr-bkt.s3-us-west-1.amazonaws.com/minecraft.service 
+
 ## Commmand line
 The stack can be created in e.g. AWS Cloud9 from the command line as follows: -
 
