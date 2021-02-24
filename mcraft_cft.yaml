@@ -1,0 +1,154 @@
+# mcraft_cft.yaml
+# Creates an EC2 instance w/ requisite Security Groups, IAM roles.
+# Optionally associates an Elastic IP to preserve the public IP on instance start/stop
+
+# cmd line or CFT GUI parameters - those w/out a Default are mandatory
+Parameters:
+  NameOfServiceParam:
+    Description: "The name of the service this stack is to be used for."
+    Type: String
+    Default: "My AWS Minecraft server"
+  InstanceTypeParam:
+    Type: String
+    Default: t3a.medium
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t3.medium
+      - t3.large
+      - t3a.medium
+      - t3a.large
+      - m5.large
+    Description: "Need at least 4Gib memory for mcraft svr. Default is t3a.medium"
+  SshToInstanceIpParam: 
+    Description: The IP address range that can be used to SSH to the EC2 Instance(s)
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: 0.0.0.0/0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x
+  KeyNameParam:
+    Description: Name of an existing EC2 KeyPair to enable SSH access into the server
+    Type: AWS::EC2::KeyPair::KeyName
+  UserDataParam:
+    Type: String
+    Description: user data passed in as base64 encoded file 
+  EIPAssocParam:
+    Description: Do you want to associate an Elastic IP?
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  ElasticIpParam: 
+    Description: The Elastic IP address to associate to the EC2 Instance(s)
+    Type: String
+    MinLength: 7
+    MaxLength: 15
+    Default: 0.0.0.0
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})
+    ConstraintDescription: must be a valid IP of the form x.x.x.x
+
+# Only associate an Elastic IP if we have one
+Conditions:
+  AssociateEIPtoInstance:
+    !Equals [true, !Ref EIPAssocParam]
+
+# enable creation of Minecraft server stack in any Region
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-047a51fa27710816e
+    us-east-2:
+      AMI: ami-01aab85a5e4a5a0fe
+    us-west-1:
+      AMI: ami-005c06c6de69aee84
+    us-west-2:
+      AMI: ami-0e999cbd62129e3b1
+    eu-central-1:
+      AMI: ami-0a6dc7529cd559185
+
+# EC2, SG, IAM roles, Elastic IP Association
+Resources:
+  Ec2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: 
+        !Ref InstanceTypeParam
+      ImageId:
+        Fn::FindInMap:
+        - RegionMap
+        - !Ref AWS::Region
+        - AMI 
+      Tags:
+        - Key: "Name"
+          Value: !Ref NameOfServiceParam 
+      SecurityGroupIds:
+        - !Ref MySecGrp
+      IamInstanceProfile: !Ref S3CWInstanceProfile
+      KeyName: !Ref KeyNameParam
+      UserData: !Ref UserDataParam
+
+  IPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Condition: AssociateEIPtoInstance
+    Properties:
+      InstanceId: !Ref Ec2Instance
+      EIP: !Ref ElasticIpParam
+      
+  MySecGrp:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Open ports 22 for ssh. 80 for http, and 25565 for minecraft server
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: !Ref SshToInstanceIpParam
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '25565'
+        ToPort: '25565'
+        CidrIp: 0.0.0.0/0
+
+  IamEc2RoleS3CWAccess:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: "IamEc2RoleS3CWAccess"
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      - arn:aws:iam::aws:policy/CloudWatchFullAccess
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+  S3CWInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Roles: 
+        - !Ref IamEc2RoleS3CWAccess
+
+# Main output is the public/Elastic IP & port for the Minecraft server 
+Outputs:
+  Website:
+    Description: The Public DNS for the EC2 Instance
+    Value: !Sub 'http://${Ec2Instance.PublicDnsName}'
+  ServerIP:
+    Value: !GetAtt
+      - Ec2Instance
+      - PublicIp
+  ServerAZ:
+    Value: !GetAtt
+      - Ec2Instance
+      - AvailabilityZone
+  MCraftSvrIpPort:
+    Description: The IP and port to give to your minecraft squadron buddies!
+    Value: !Sub '${Ec2Instance.PublicIp}:25565'
+

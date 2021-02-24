@@ -1,0 +1,76 @@
+Content-Type: multipart/mixed; boundary="//"
+MIME-Version: 1.0
+
+--//
+Content-Type: text/cloud-config; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="cloud-config.txt"
+
+#cloud-config
+cloud_final_modules:
+- [scripts-user, always]
+
+--//
+Content-Type: text/x-shellscript; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="userdata.txt"
+
+#!/bin/bash
+# set debug mode
+set -x
+
+# above multi-mime allows user data to run EVERY time EC2 instance is restarted
+
+# output log of userdata to /var/log/user-data.log
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+
+# pre-reqs : eg Java 1.8
+yum install -y java-1.8.0
+
+# MODIFY these vars for your S3 bucket origin and EC2 minecraft dir 
+mcraft_dir=/minecraft
+s3_bkt_dir=minecraft-svr-bkt
+
+# create dir if doesnt exist, setup perms, grab latest minecraft server jar 
+# then get the latest systemd service setup & start minecraft
+if [ ! -d "$mcraft_dir" ]
+then
+	sudo mkdir -p $mcraft_dir
+	sudo chown -R ec2-user:ec2-user $mcraft_dir
+	sudo aws s3 cp s3://$s3_bkt_dir/minecraft_server.1.16.4.jar $mcraft_dir
+	cd $mcraft_dir
+	ln -sfn minecraft_server.1.16.4.jar minecraft_server.jar
+	echo '#By changing the setting below to TRUE you are indicating your agreement to our EULA (https://account.mojang.com/documents/minecraft_eula).
+#Mon Aug 06 18:11:14 UTC 2018
+eula=true' > eula.txt
+fi
+cd $mcraft_dir
+sudo aws s3 cp s3://$s3_bkt_dir/minecraft.service /etc/systemd/system/minecraft.service
+sudo systemctl daemon-reload
+sudo service minecraft start
+
+# OPTIONAL : stats for the minecraft server
+mcraft_stats_dir=$mcraft_dir/log_analyzer
+if [ -d "mcraft_stats_dir" ]
+then
+	cd log_analyzer/mclogalyzer-master/mclogalyzer
+	python ./mclogalyzer.py --week /minecraft/logs stats.html
+	cp stats.html /var/www/html/
+fi
+
+# more debug cmds...
+/bin/echo "Hello World: $(date)" >> /tmp/testfile.txt
+
+# memory usage monitoring scripts for the EC2 instance
+mem_cw_dir=/home/ec2-user/aws-scripts-mon
+if [ ! -d "$mem_cw_dir" ]
+then
+	sudo yum install -y perl-Switch perl-DateTime perl-Sys-Syslog perl-LWP-Protocol-https perl-Digest-SHA.x86_64
+	cd /home/ec2-user/
+	curl https://aws-cloudwatch.s3.amazonaws.com/downloads/CloudWatchMonitoringScripts-1.2.2.zip -O
+	unzip CloudWatchMonitoringScripts-1.2.2.zip
+	rm -rf CloudWatchMonitoringScripts-1.2.2.zip
+fi
+
