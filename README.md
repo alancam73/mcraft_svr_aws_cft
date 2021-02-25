@@ -49,3 +49,13 @@ Apart from "Have fun!"...
   * get the instance-id from your Minecraft server EC2 instance and pass it in as "inst_name" as an Environment variable to the lambda fxn. Do this for both StartEC2Instances and StopEc2Instances
   * Set up a CloudWatch Events Rule eg <code>0 23 ? * MON-FRI *</code> on StartEC2Instances will start the Instance every weekday at 2300 GMT (3pm PST). <code>0 5 ? * MON-FRI *</code> on StopEC2Instances will stop the instance M-F at 9pm PST
 * Get an Elastic IP so that your server IP:port never changes & your kids dont get mad! Go to the EC2 service, click Elastic IP -> Allocate Elastic IP address. You can then pass it in to your create-stack, update-stack as a parameter per above cmd line options. Note that AWS charges a (very small) amount for an EIP when your instance is stopped.
+* Save cost. A t3a.medium running eg 8 hrs per day with 1 EIP will cost approx ~$12 / month per https://calculator.s3.amazonaws.com/index.html - you can further reduce this by switching to a spot instance - see https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-spot-instances.html 
+  * To do this, stop the instance, snapshot your current AMI, then create a new instance based on this AMI - check the Request Spot Instance box then bid e.g. 20% higher than the listed spot price. Be sure to check "persistent request" & interruption behavior = "Stop" (ie NOT "terminate"!)
+* Check the server health in Cloudwatch - CPU utilization, Network traffic is built in to the EC2 KPIs. The memory utilization/used/available stats were added via the user-data script in the CloudFormation creation. These appear as "Custom Namespaces" -> "System/Linux" in Cloudwatch Metrics. It is suggested to create a CW dashboard to collect all stats, alarms in 1 place - see https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create_dashboard.html 
+
+## RGR (Rather good References)
+Here are some killer articles which helped me en-route: -
+* https://medium.com/@lanceweber/hosting-your-minecraft-server-on-aws-chapter-1-introduction-syllabus-934db77a0985
+* https://medium.com/@sumekenov/how-to-launch-minecraft-server-on-aws-7f4b9f7febf7
+* https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-guide.html
+* https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
