@@ -41,7 +41,8 @@ Here are some ways to check everything worked!
 ## Debugging
 Here are some debugging tips
 * If the stack fails to create check out the CFT stack Events section - it usually has a good error description
-* if the stack succeeds but no Minecraft server is created then check (a) the S3 bucket you are using with the minecraft.service and minecraft server jar file is accessible (b) check versions - the script defaults to 1.16.4 - change this to whatever version you want but make sure the S3 bucket version and mcraft-user-data.txt version ref matches (c) check <code>/var/log/user-data.log</code> and <code>/var/log/cloud-init-output.log</code> to see if any errors occurred - e.g. you may need to change the <code>s3_bkt_dir</code> since S3 bucket names need to be unique.
+* if the stack succeeds but no Minecraft server is created then check (a) the S3 bucket you are using with the minecraft.service and minecraft server jar file is accessible (b) check versions - the script defaults to 1.16.4 - change this to whatever version you want but make sure the S3 bucket version and mcraft-user-data.txt version ref matches (c) check <code>/var/log/user-data.log</code> and <code>/var/log/cloud-init-output.log</code> to see if any errors occurred - e.g. you will need to set/change the <code>s3_bkt_dir</code> since S3 bucket names need to be unique.
+* If the update-stack does nothing it may be because you changed something which did not force a stack update eg changing the contents of the user-data, or changing a tag. 
 
 ## Next Steps
 Apart from "Have fun!"...
@@ -57,6 +58,7 @@ Apart from "Have fun!"...
 Here are some oddities that may baffle you as much as they baffled me: -
 * user data in the CloudFormation AWS Console - if you use the console then you cant pass in a file w/ base64 encoding as required - so instead you have to enter all of the user-data bash script inline in the CFT yaml per https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-ec2.html#scenario-ec2-instance-with-vol-and-tags . This is ugly! Hence the reason why I use Cloud9 and pass in the user-data as a maintainable, versionable file instead using <code>ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt)</code>
 * persistent spot instance request in CFT - couldnt see any options for this in https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html - hence the template simply uses an OnDemand instance
+* update-stack occasionally fails - one common reason observed for this was if the EC2 instance is stopped when you try to do update-stack, then CFT gets confused because PublicIp is referenced in the template but there is no public IP if the instance is stopped. This problem goes away if you have a permanent Elastic IP. 
 
 ## RGR (Rather Good References)
 Here are some killer articles which helped me en-route: -
