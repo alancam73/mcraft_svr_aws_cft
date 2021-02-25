@@ -53,9 +53,15 @@ Apart from "Have fun!"...
   * To do this, stop the instance, snapshot your current AMI, then create a new instance based on this AMI - check the Request Spot Instance box then bid e.g. 20% higher than the listed spot price. Be sure to check "persistent request" & interruption behavior = "Stop" (ie NOT "terminate"!)
 * Check the server health in Cloudwatch - CPU utilization, Network traffic is built in to the EC2 KPIs. The memory utilization/used/available stats were added via the user-data script in the CloudFormation creation. These appear as "Custom Namespaces" -> "System/Linux" in Cloudwatch Metrics. It is suggested to create a CW dashboard to collect all stats, alarms in 1 place - see https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/create_dashboard.html 
 
-## RGR (Rather good References)
+## Strange quirks
+Here are some oddities that may baffle you as much as they baffled me: -
+* user data in the CloudFormation AWS Console - if you use the console then you cant pass in a file w/ base64 encoding as required - so instead you have to enter all of the user-data bash script inline in the CFT yaml per https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-ec2.html#scenario-ec2-instance-with-vol-and-tags . This is ugly! Hence the reason why I use Cloud9 and pass in the user-data as a maintainable, versionable file instead using <code>ParameterKey=UserDataParam,ParameterValue=$(base64 -w0 mcraft-user-data.txt)</code>
+* persistent spot instance request in CFT - couldnt see any options for this in https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-instance.html - hence the template simply uses an OnDemand instance
+
+## RGR (Rather Good References)
 Here are some killer articles which helped me en-route: -
 * https://medium.com/@lanceweber/hosting-your-minecraft-server-on-aws-chapter-1-introduction-syllabus-934db77a0985
 * https://medium.com/@sumekenov/how-to-launch-minecraft-server-on-aws-7f4b9f7febf7
 * https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-guide.html
 * https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/user-data.html
+* https://stackoverflow.com/questions/38195137/passing-userdata-file-to-aws-cloudformation-stack
